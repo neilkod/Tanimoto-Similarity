@@ -1,7 +1,16 @@
 #!/usr/bin/python
+""" given a list of 'events', compute the tanimoto similarity across all items
+    input data must be in the form (item,user)
+    formula used is tanimoto, which is a variant of jaccard.  
+    τ = NAB / NA + NB - NAB """
+    
 import sys
 import MySQLdb
+
+# the list rows[] stores the original source data, whether its from a database or .csv file.
 rows=[]
+
+
 users={}
 items=[]
 
@@ -20,14 +29,17 @@ if useSQL:
   cursor = conn.cursor()
   
   # data must be in the form (item_id, user_id)
-  sql="select histogram_value ,account_id from variety.histogram_archive limit 10000"
+  # this is my first attempt at mysql and python.  i'm building a result set
+  # then looping through the cursor and appending (item_id,user_id) to a list called rows
+  # this method is from the documentation, I dont know if any more efficient ones exist.
+  sql="select histogram_value ,account_id from variety.histogram_archive order by histogram_value limit 10000"
   cursor.execute(sql)
   while (1):
     row = cursor.fetchone()
     if row == None:
       break
     rows.append((int(row[0]),row[1]))
-#  conn.close()
+
 else:  
   for line in file('histogram_sorted.csv'):
   #for line in file(sys.argv[1]):
@@ -40,11 +52,12 @@ rows.sort()
 last_item = None
 last_user = None
 
-#####
+
 # build the list of items
 # also build a dict of users and items rated
-for item,user in rows:#[0:500]:
-#  print (item,user)
+
+for item,user in rows:
+
   users[user]=users.get(user,[])
   users[user].append(item)
   if item != last_item:

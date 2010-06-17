@@ -47,7 +47,10 @@ userlist=[]
 # item 83 has been rated with items 50 and 49 once apiece.
 relatedItems={}
 
-
+def tanimotoSimilarity(ab,a,b):
+ 
+  return ab / float(a + b -ab)
+  
 def readDbConf():
   """
   procedure readDbConf() reads a configuration file as input and
@@ -84,7 +87,7 @@ if useSQL:
   # this is my first attempt at mysql and python.  i'm building a result set
   # then looping through the cursor and appending (item_id,user_id) to a list called rows
   # this method is from the documentation, I dont know if any more efficient ones exist.
-  sql="select histogram_value ,account_id from variety.histogram_archive order by histogram_value limit 100000"
+  sql="select histogram_value ,account_id from variety.histogram_archive order by histogram_value limit 50000"
   cursor.execute(sql)
   while (1):
     row = cursor.fetchone()
@@ -170,6 +173,8 @@ for key,listOfReaders in intersections.iteritems():   #.iteritems():
   for b,cnt in relatedItems[key].iteritems():
     if cnt >= minimimOverlapThreshhold:
         tanimotoSim = cnt / float(len(intersections[key]) + len(intersections[b])-cnt)
+        sim = tanimotoSimilarity(cnt,len(intersections[key]),len(intersections[b]))
+        print '%f\t%f' % (tanimotoSim, sim)
 #        print "%d\t%d\t%d\t%d\t%d\t%f\t%f" % (key,b,cnt,len(intersections[key]),len(intersections[b]),(cnt / float((len(intersections[key]) + len(intersections[b])-cnt))),tanimotoSim)
 #        print "%d\t%d\t%d\t%d\t%d\t%f" % (key,b,cnt,len(intersections[key]),len(intersections[b]),tanimotoSim)
       # this needs to be a sub-function

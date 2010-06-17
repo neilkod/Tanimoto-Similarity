@@ -2,7 +2,7 @@
 """ given a list of 'events', compute the tanimoto similarity across all items
     input data must be in the form (item,user)
     formula used is tanimoto, which is a variant of jaccard.  
-    τ = NAB / NA + NB - NAB """
+    T = NAB / NA + NB - NAB """
     
 import sys
 import MySQLdb
@@ -10,8 +10,12 @@ import MySQLdb
 # the list rows[] stores the original source data, whether its from a database or .csv file.
 rows=[]
 
-
+# dict users has user_id as the key and a list of rated items as the value
+# example {'887C6CC8-22ED-42A1-A634-904253488F7C': [46, 49, 60], '6B98CBCD-FA7C-4C37-8105-43CCC83708EA': [34]}
 users={}
+
+# list items is simply a list of all item_id's that have been rated.
+# example [1, 26, 30, 34, 35, 37, 39, 41]
 items=[]
 
 # minimumOverlapThreshhold is a filter that will restrict items based on
@@ -176,4 +180,5 @@ last article=None
 for article,user in rows:
   if article != last_article:
 """
+print items
 

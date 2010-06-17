@@ -4,6 +4,10 @@ import MySQLdb
 rows=[]
 users={}
 items=[]
+
+# useSQL directs the program to use a sql database.  otherwise we'll
+# use a text file as input.
+# either way, the input must be in the format (item, user)
 useSQL=True
 
 intersections={}
@@ -12,28 +16,26 @@ userlist=[]
 relatedItems={}
 
 if useSQL:
-	conn = MySQLdb.connect (host = "localhost",user="root",db="variety")
-	cursor = conn.cursor()
-	sql="select histogram_value,account_id from variety.histogram_archive"
-	cursor.execute(sql)
-	while (1):
-	  row = cursor.fetchone()
-	  if row == None:
-	    break
-	  rows.append((int(row[0]),row[1]))
-#	conn.close()
-else:	
-	for line in file('histogram_sorted.csv'):
-	#for line in file(sys.argv[1]):
- 		a,b=line.strip().split(',')
- 		a=int(a)
- 		rows.append((a,b))
+  conn = MySQLdb.connect (host = "localhost",user="root",db="variety")
+  cursor = conn.cursor()
+  
+  # data must be in the form (item_id, user_id)
+  sql="select histogram_value ,account_id from variety.histogram_archive limit 10000"
+  cursor.execute(sql)
+  while (1):
+    row = cursor.fetchone()
+    if row == None:
+      break
+    rows.append((int(row[0]),row[1]))
+#  conn.close()
+else:  
+  for line in file('histogram_sorted.csv'):
+  #for line in file(sys.argv[1]):
+     a,b=line.strip().split(',')
+     a=int(a)
+     rows.append((a,b))
 
 rows.sort()
-
-
-
-
 
 last_item = None
 last_user = None

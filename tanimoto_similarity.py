@@ -28,9 +28,21 @@ minimimOverlapThreshhold=5
 # either way, the input must be in the format (item, user)
 useSQL=True
 
+# dict intersections has item_id as the key and a list of user_ids who rated the item as the value
+# example : { 26: ['19176B2C-033B-496E-A708-3FCD7C5A4558', '6E06D52F-0818-4ED7-8F28-2D90856B9878'] }
 intersections={}
-itemusers={}
+
+# userlist is a temporary list that stores the users who have rated a given item.
+# as we loop through the items, we keep track of which userids have rated the item.
+# we clear this list and start over when we move on to the next itemid.
 userlist=[]
+
+# dict relatedItems stores an item_id as the key and as the value stores a dictionary 
+# containing a related item_id as the key and the count of times its been rated with the original item
+# as the value
+# example  { 83: {48: 2, 65: 1, 50: 1, 49: 1} }
+# means that item 83 has been rated with item 48 twice, item 83 has been rated with 65 once,
+# item 83 has been rated with items 50 and 49 once apiece.
 relatedItems={}
 
 if useSQL:
@@ -180,5 +192,7 @@ last article=None
 for article,user in rows:
   if article != last_article:
 """
-print items
+print relatedItems
+print len(relatedItems)
+
 

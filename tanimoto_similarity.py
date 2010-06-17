@@ -52,12 +52,14 @@ def readDbConf():
   for line in file('local.conf'):
     k,v = line.strip().split()
     parms[k]=v
+  if 'password' not in parms.keys():
+    parms['password'] = ''
   return parms
   
 if useSQL:
   parms = readDbConf()
   print parms
-  conn = MySQLdb.connect (host = "localhost",user="root",db="variety")
+  conn = MySQLdb.connect (host = parms['host'],user=parms['username'],db=parms['database'],passwd=parms['password'])
   cursor = conn.cursor()
   
   # data must be in the form (item_id, user_id)

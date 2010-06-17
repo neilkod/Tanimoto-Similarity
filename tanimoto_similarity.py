@@ -47,19 +47,37 @@ userlist=[]
 # item 83 has been rated with items 50 and 49 once apiece.
 relatedItems={}
 
+
 def readDbConf():
+  """
+  procedure readDbConf() reads a configuration file as input and
+  returns a dictionary of items based on the configuration file.
+  the file must be in the format keyword<tab>value
+  and expects the following fields
+
+  database  db_elpais_uy
+  RO_host  127.0.0.1
+  RO_password  123
+  RO_username  root
+  RW_host  127.0.0.1
+  RW_password  123
+  RW_username  root 
+  """  
   parms = {}
   for line in file('local.conf'):
     k,v = line.strip().split()
     parms[k]=v
-  if 'password' not in parms.keys():
-    parms['password'] = ''
+  if 'RO_password' not in parms.keys():
+    parms['RO_password'] = ''
+  if 'RW_password' not in parms.keys():
+    parms['RW_password'] = ''
   return parms
   
 if useSQL:
   parms = readDbConf()
-  print parms
-  conn = MySQLdb.connect (host = parms['host'],user=parms['username'],db=parms['database'],passwd=parms['password'])
+  # we are using two separate databases - a read-only database for retrieving rated items
+  # and a read/write database for storing the results.
+  conn = MySQLdb.connect (host = parms['RO_host'],user=parms['RO_username'],db=parms['database'],passwd=parms['RO_password'])
   cursor = conn.cursor()
   
   # data must be in the form (item_id, user_id)
@@ -73,7 +91,10 @@ if useSQL:
     if row == None:
       break
     rows.append((int(row[0]),row[1]))
-
+  
+  # we're done, close the database connection  
+  conn.close()
+  
 else:  
   for line in file('histogram_sorted.csv'):
   #for line in file(sys.argv[1]):
@@ -131,20 +152,10 @@ print 'len items: %d' % (len(items))
 
 
 
-"""
-# build the list of items
-for item,user in rows:
-  if item != last_item:
-    last_item = item
-    users = [user]
-    items.append(item)
-  else:
-    users.append(user)
-    
-"""    
-
-
-
+# we're going to store the results into a new database connection
+# this time, we'll use the read/write connection
+conn = MySQLdb.connect (host = parms['RW_host'],user=parms['RW_username'],db=parms['database'],passwd=parms['RW_password'])
+cursor = conn.cursor()
 
 for key,listOfReaders in intersections.iteritems():   #.iteritems():
   relatedItems[key]={}
@@ -167,8 +178,7 @@ for key,listOfReaders in intersections.iteritems():   #.iteritems():
         cursor.execute(sql)
 #    print len(intersections[key])
 #    print len(intersections[b])
-if useSQL:          
-  conn.close()
+conn.close()        
 
 print "................................"
 

@@ -14,7 +14,11 @@ rows=[]
 users={}
 items=[]
 
+# minimumOverlapThreshhold is a filter that will restrict items based on
+# a minimum number of times they've been rated together.
+# This will be set based on the type of item rated.
 minimimOverlapThreshhold=5
+
 # useSQL directs the program to use a sql database.  otherwise we'll
 # use a text file as input.
 # either way, the input must be in the format (item, user)

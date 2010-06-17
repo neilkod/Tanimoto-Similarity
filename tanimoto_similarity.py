@@ -113,18 +113,11 @@ intersections[last_item]=userlist
 
 # now, for items, lets go through the list and find
 #for item in items:
-  #find the users who bought each item
+  #find the users who rated each item
   
 print 'len intersections:%d ' % (len(intersections))
 print 'len items: %d' % (len(items))
-print len(users)
-#print users
-#print "intersections: %s" % intersections
-#print intersections
-#print intersections.keys()
-#print "length of intersections 0 is: %d "%len(intersections[0])
-#print "length of intersections 8 is: %d "%len(intersections[8])
-#print "length of intersections 9 is: %d "%len(intersections[9])
+
 
 
 """
@@ -141,11 +134,6 @@ for item,user in rows:
 
 
 
-
-#for row in rows:
-#  print row
-#intersections={}
-#print intersections
 
 for key,listOfReaders in intersections.iteritems():   #.iteritems():
   relatedItems[key]={}
@@ -168,40 +156,9 @@ for key,listOfReaders in intersections.iteritems():   #.iteritems():
         cursor.execute(sql)
 #    print len(intersections[key])
 #    print len(intersections[b])
-          
-conn.close()
+if useSQL:          
+  conn.close()
 
-#  print "items read with %d are %s" % (key,related)
-
-
-  
-#print relatedItems  
-    
-#  print item
-
-
-#    print uid
-#    print users[uid]
-#    if item in users[uid]:
-#      print "MAATCH!!"
-    
-    
-  
-
-
-  
-  
-#print intersections
 print "................................"
-#print users
-
-
-"""  
-last article=None
-for article,user in rows:
-  if article != last_article:
-"""
-print relatedItems
-print len(relatedItems)
 
 

@@ -14,6 +14,7 @@ rows=[]
 users={}
 items=[]
 
+minimimOverlapThreshhold=5
 # useSQL directs the program to use a sql database.  otherwise we'll
 # use a text file as input.
 # either way, the input must be in the format (item, user)
@@ -128,7 +129,7 @@ for key,listOfReaders in intersections.iteritems():   #.iteritems():
           related.append(itemRead)
         relatedItems[key][itemRead]= relatedItems[key].get(itemRead,0) + 1
   for b,cnt in relatedItems[key].iteritems():
-    if cnt >= 5:
+    if cnt >= minimimOverlapThreshhold:
         tanimotoSim = cnt / float(len(intersections[key]) + len(intersections[b])-cnt)
 #        print "%d\t%d\t%d\t%d\t%d\t%f\t%f" % (key,b,cnt,len(intersections[key]),len(intersections[b]),(cnt / float((len(intersections[key]) + len(intersections[b])-cnt))),tanimotoSim)
 #        print "%d\t%d\t%d\t%d\t%d\t%f" % (key,b,cnt,len(intersections[key]),len(intersections[b]),tanimotoSim)

@@ -2,7 +2,9 @@
 """ given a list of 'events', compute the tanimoto similarity across all items
     input data must be in the form (item,user)
     formula used is tanimoto, which is a variant of jaccard.  
-    T = NAB / NA + NB - NAB """
+    T = NAB / NA + NB - NAB 
+    an event is considered a user rating an item.
+    """
     
 import sys
 import MySQLdb
@@ -68,8 +70,15 @@ else:
      a=int(a)
      rows.append((a,b))
 
+# this next step might not be necessary because the SQL takes care of sorting the rows
+# to order them by item_id.  Additionally, when I use a .csv file as input, I try
+# and pre-sort it by the item_id to save python from having to sort.
+
 rows.sort()
 
+# initialize last_item and last_user variables.  These are used
+# to keep track of where we are inside of loops and to see if
+# items or users have changed.
 last_item = None
 last_user = None
 
@@ -79,10 +88,15 @@ last_user = None
 
 for item,user in rows:
 
+  # add the user to the users dict if they don't already exist.
   users[user]=users.get(user,[])
+  
+  # append the current item_id to the list of items rated by the current user
   users[user].append(item)
+  
   if item != last_item:
-    # we just started a new item
+    # we just started a new item which means we just finished processing an item
+    # write the userlist for the last item to the intersections dictionary.
     if last_item != None:
       intersections[last_item]=userlist
 
@@ -92,15 +106,10 @@ for item,user in rows:
     items.append(item)
   else:
     userlist.append(user)
-#  print 'item: %d user: %s userlist is %s' % (item,user,userlist)    
+
 intersections[last_item]=userlist    
 
-# now, for each item
-# find 
 
-    
-    
-#####
 
 # now, for items, lets go through the list and find
 #for item in items:

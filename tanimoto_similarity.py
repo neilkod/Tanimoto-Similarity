@@ -172,14 +172,14 @@ for key,listOfReaders in intersections.iteritems():   #.iteritems():
         relatedItems[key][itemRead]= relatedItems[key].get(itemRead,0) + 1
   for b,cnt in relatedItems[key].iteritems():
     if cnt >= minimimOverlapThreshhold:
-        tanimotoSim = cnt / float(len(intersections[key]) + len(intersections[b])-cnt)
-        sim = tanimotoSimilarity(cnt,len(intersections[key]),len(intersections[b]))
-        print '%f\t%f' % (tanimotoSim, sim)
+        #tanimotoSim = cnt / float(len(intersections[key]) + len(intersections[b])-cnt)
+        similarity = tanimotoSimilarity(cnt,len(intersections[key]),len(intersections[b]))
+
 #        print "%d\t%d\t%d\t%d\t%d\t%f\t%f" % (key,b,cnt,len(intersections[key]),len(intersections[b]),(cnt / float((len(intersections[key]) + len(intersections[b])-cnt))),tanimotoSim)
 #        print "%d\t%d\t%d\t%d\t%d\t%f" % (key,b,cnt,len(intersections[key]),len(intersections[b]),tanimotoSim)
       # this needs to be a sub-function
 
-        sql= "insert into story_similarity(method,story_id,related_story_id,relevance,created) values(6,%d,%d,%f,curdate())"%(key,b,tanimotoSim)
+        sql= "insert into story_similarity(method,story_id,related_story_id,relevance,created) values(6,%d,%d,%f,curdate())"%(key,b,similarity)
         cursor.execute(sql)
 #    print len(intersections[key])
 #    print len(intersections[b])

@@ -8,6 +8,7 @@
     
 import sys
 import MySQLdb
+import operator
 
 # the list rows[] stores the original source data, whether its from a database or .csv file.
 rows=[]
@@ -23,7 +24,7 @@ items=[]
 # minimumOverlapThreshhold is a filter that will restrict items based on
 # a minimum number of times they've been rated together.
 # This will be set based on the type of item rated.
-minimimOverlapThreshhold=5
+minimumOverlapThreshhold=5
 
 # useSQL directs the program to use a sql database.  otherwise we'll
 # use a text file as input.
@@ -46,6 +47,9 @@ userlist=[]
 # means that item 83 has been rated with item 48 twice, item 83 has been rated with 65 once,
 # item 83 has been rated with items 50 and 49 once apiece.
 relatedItems={}
+
+# how many similar stories we should actually find for each story
+similarStoryCount=15
 
 def tanimotoSimilarity(ab,a,b):
  
@@ -87,7 +91,8 @@ if useSQL:
   # this is my first attempt at mysql and python.  i'm building a result set
   # then looping through the cursor and appending (item_id,user_id) to a list called rows
   # this method is from the documentation, I dont know if any more efficient ones exist.
-  sql="select histogram_value ,account_id from variety.histogram_archive order by histogram_value limit 50000"
+#  sql="select a.histogram_value,a.account_id from variety.histogram_archive a, (select z.account_id from variety.histogram_archive z group by z.account_id having count(*)>1) sub where a.account_id=sub.account_id"
+  sql="select histogram_value ,account_id from variety.histogram_archive order by histogram_value"
   cursor.execute(sql)
   while (1):
     row = cursor.fetchone()
@@ -157,10 +162,13 @@ print 'len items: %d' % (len(items))
 
 # we're going to store the results into a new database connection
 # this time, we'll use the read/write connection
+parms['database']='variety'
 conn = MySQLdb.connect (host = parms['RW_host'],user=parms['RW_username'],db=parms['database'],passwd=parms['RW_password'])
 cursor = conn.cursor()
-
-for key,listOfReaders in intersections.iteritems():   #.iteritems():
+recCount = 0
+realRecCount=0
+for key,listOfReaders in intersections.iteritems():
+  similarityArray={}
   relatedItems[key]={}
   related=[]
 
@@ -171,20 +179,33 @@ for key,listOfReaders in intersections.iteritems():   #.iteritems():
           related.append(itemRead)
         relatedItems[key][itemRead]= relatedItems[key].get(itemRead,0) + 1
   for b,cnt in relatedItems[key].iteritems():
-    if cnt >= minimimOverlapThreshhold:
-        #tanimotoSim = cnt / float(len(intersections[key]) + len(intersections[b])-cnt)
+    if cnt >= minimumOverlapThreshhold:
+        
+        # this is the old calc, saved for reference
+        # tanimotoSim = cnt / float(len(intersections[key]) + len(intersections[b])-cnt)
         similarity = tanimotoSimilarity(cnt,len(intersections[key]),len(intersections[b]))
+        similarityArray[(key,b)] = similarity
+        recCount = recCount + 1
+#        print "%d\t%d\t%d\t%d\t%d\t%f" % (key,b,cnt,len(intersections[key]),len(intersections[b]),similarity)
 
-#        print "%d\t%d\t%d\t%d\t%d\t%f\t%f" % (key,b,cnt,len(intersections[key]),len(intersections[b]),(cnt / float((len(intersections[key]) + len(intersections[b])-cnt))),tanimotoSim)
-#        print "%d\t%d\t%d\t%d\t%d\t%f" % (key,b,cnt,len(intersections[key]),len(intersections[b]),tanimotoSim)
-      # this needs to be a sub-function
+  #debug
+  if key==20658:
+    print "20658"
+    print intersections[key]
+    print relatedItems[key]
+    print similarityArray
 
-        sql= "insert into story_similarity(method,story_id,related_story_id,relevance,created) values(6,%d,%d,%f,curdate())"%(key,b,similarity)
-        cursor.execute(sql)
-#    print len(intersections[key])
-#    print len(intersections[b])
-conn.close()        
+  similarity_sorted=sorted(similarityArray.iteritems(),key=operator.itemgetter(1))
+  for topN in range(min(similarStoryCount,len(similarity_sorted))):
+    sql= "insert into story_similarity(method,story_id,related_story_id,relevance,created) values(6,%d,%d,%f,curdate())"%(similarity_sorted[topN][0][0],similarity_sorted[topN][0][1],similarity_sorted[topN][1])
+#    print sql
+    realRecCount=realRecCount+1
+    cursor.execute(sql)
+    
+  
 
-print "................................"
+###print similarityArray
+conn.close()     
+print "count is: %d" % recCount   
 
-
+print "real count is: %d" % realRecCount   

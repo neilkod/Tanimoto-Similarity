@@ -31,9 +31,9 @@ minimumOverlapThreshhold=5
 # either way, the input must be in the format (item, user)
 useSQL=True
 
-# dict intersections has item_id as the key and a list of user_ids who rated the item as the value
+# dict usersForItem has item_id as the key and a list of user_ids who rated the item as the value
 # example : { 26: ['19176B2C-033B-496E-A708-3FCD7C5A4558', '6E06D52F-0818-4ED7-8F28-2D90856B9878'] }
-intersections={}
+usersForItem={}
 
 # userlist is a temporary list that stores the users who have rated a given item.
 # as we loop through the items, we keep track of which userids have rated the item.
@@ -136,9 +136,9 @@ for item,user in rows:
   
   if item != last_item:
     # we just started a new item which means we just finished processing an item
-    # write the userlist for the last item to the intersections dictionary.
+    # write the userlist for the last item to the usersForItem dictionary.
     if last_item != None:
-      intersections[last_item]=userlist
+      usersForItem[last_item]=userlist
 
     userlist=[user]
   
@@ -147,7 +147,7 @@ for item,user in rows:
   else:
     userlist.append(user)
 
-intersections[last_item]=userlist    
+usersForItem[last_item]=userlist    
 
 
 
@@ -155,7 +155,7 @@ intersections[last_item]=userlist
 #for item in items:
   #find the users who rated each item
   
-print 'len intersections:%d ' % (len(intersections))
+print 'len usersForItem:%d ' % (len(usersForItem))
 print 'len items: %d' % (len(items))
 
 
@@ -163,13 +163,14 @@ print 'len items: %d' % (len(items))
 # we're going to store the results into a new database connection
 # this time, we'll use the read/write connection
 parms['database']='variety'
-conn = MySQLdb.connect (host = parms['RW_host'],user=parms['RW_username'],db=parms['database'],passwd=parms['RW_password'])
-cursor = conn.cursor()
+#conn = MySQLdb.connect (host = parms['RW_host'],user=parms['RW_username'],db=parms['database'],passwd=parms['RW_password'])
+#cursor = conn.cursor()
 recCount = 0
 realRecCount=0
 
+fileHandle = open('similarity.log','a')
 
-for key,listOfReaders in intersections.iteritems():
+for key,listOfReaders in usersForItem.iteritems():
   similarityArray={}
   relatedItems[key]={}
   related=[]
@@ -188,28 +189,28 @@ for key,listOfReaders in intersections.iteritems():
         
         # this is the old calc, saved for reference
         # tanimotoSim = cnt / float(len(intersections[key]) + len(intersections[b])-cnt)
-        similarity = tanimotoSimilarity(cnt,len(intersections[key]),len(intersections[b]))
+        similarity = tanimotoSimilarity(cnt,len(usersForItem[key]),len(usersForItem[b]))
         similarityArray[(key,b)] = similarity
         recCount = recCount + 1
 #        print "%d\t%d\t%d\t%d\t%d\t%f" % (key,b,cnt,len(intersections[key]),len(intersections[b]),similarity)
 
-  #debug
-  if key==20658:
-    print "20658"
-    print intersections[key]
-    print relatedItems[key]
-    print similarityArray
-
   similarity_sorted=sorted(similarityArray.iteritems(),key=operator.itemgetter(1))
   for topN in range(min(similarStoryCount,len(similarity_sorted))):
-    sql= "insert into story_similarity(method,story_id,related_story_id,relevance,created) values(6,%d,%d,%f,curdate())"%(similarity_sorted[topN][0][0],similarity_sorted[topN][0][1],similarity_sorted[topN][1])
+    sql= "insert into story_similarity(method,story_id,related_story_id,relevance) values(6,%d,%d,%f)"%(similarity_sorted[topN][0][0],similarity_sorted[topN][0][1],similarity_sorted[topN][1])
+
+    output = '%d\t%d\t%f\n' % (similarity_sorted[topN][0][0],similarity_sorted[topN][0][1],similarity_sorted[topN][1])
+
+    fileHandle.write(output)
     realRecCount=realRecCount+1
-    cursor.execute(sql)
+#  commented out the cursor.execute(sql) because we're going to create a text file and then use a bulk loader.
+    
+#    cursor.execute(sql)
     
   
 
 ###print similarityArray
-conn.close()     
+#conn.close()    
+fileHandle.close() 
 print "count is: %d" % recCount   
 
 print "real count is: %d" % realRecCount   

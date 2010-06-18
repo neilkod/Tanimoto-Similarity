@@ -51,6 +51,9 @@ relatedItems={}
 # how many similar stories we should actually find for each story
 similarStoryCount=15
 
+# if writeDatabase is enabled, we'll store the results into a sql database.
+writeDatabase=False
+
 def tanimotoSimilarity(ab,a,b):
  
   return ab / float(a + b -ab)
@@ -160,11 +163,13 @@ print 'len items: %d' % (len(items))
 
 
 
-# we're going to store the results into a new database connection
+# if writeDatabase is True, we're going to store the results into a new database connection
 # this time, we'll use the read/write connection
-parms['database']='variety'
-#conn = MySQLdb.connect (host = parms['RW_host'],user=parms['RW_username'],db=parms['database'],passwd=parms['RW_password'])
-#cursor = conn.cursor()
+if writeDatabase:
+  parms['database']='variety'
+  conn = MySQLdb.connect (host = parms['RW_host'],user=parms['RW_username'],db=parms['database'],passwd=parms['RW_password'])
+  cursor = conn.cursor()
+  
 recCount = 0
 realRecCount=0
 
@@ -202,14 +207,15 @@ for key,listOfReaders in usersForItem.iteritems():
 
     fileHandle.write(output)
     realRecCount=realRecCount+1
+    if writeDatabase:
+      sql= "insert into story_similarity(method,story_id,related_story_id,relevance) values(6,%d,%d,%f)"%(similarity_sorted[topN][0][0],similarity_sorted[topN][0][1],similarity_sorted[topN][1])      
+      cursor.execute(sql)
 #  commented out the cursor.execute(sql) because we're going to create a text file and then use a bulk loader.
-    
-#    cursor.execute(sql)
-    
-  
 
 ###print similarityArray
-#conn.close()    
+if writeDatabase:
+  conn.close()
+  
 fileHandle.close() 
 print "count is: %d" % recCount   
 

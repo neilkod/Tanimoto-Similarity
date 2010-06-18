@@ -91,7 +91,7 @@ if useSQL:
   # this is my first attempt at mysql and python.  i'm building a result set
   # then looping through the cursor and appending (item_id,user_id) to a list called rows
   # this method is from the documentation, I dont know if any more efficient ones exist.
-#  sql="select a.histogram_value,a.account_id from variety.histogram_archive a, (select z.account_id from variety.histogram_archive z group by z.account_id having count(*)>1) sub where a.account_id=sub.account_id"
+  #  sql="select a.histogram_value,a.account_id from variety.histogram_archive a, (select z.account_id from variety.histogram_archive z group by z.account_id having count(*)>1) sub where a.account_id=sub.account_id"
   sql="select histogram_value ,account_id from variety.histogram_archive order by histogram_value"
   cursor.execute(sql)
   while (1):
@@ -167,6 +167,8 @@ conn = MySQLdb.connect (host = parms['RW_host'],user=parms['RW_username'],db=par
 cursor = conn.cursor()
 recCount = 0
 realRecCount=0
+
+
 for key,listOfReaders in intersections.iteritems():
   similarityArray={}
   relatedItems[key]={}
@@ -178,7 +180,10 @@ for key,listOfReaders in intersections.iteritems():
         if itemRead not in related:
           related.append(itemRead)
         relatedItems[key][itemRead]= relatedItems[key].get(itemRead,0) + 1
+        
   for b,cnt in relatedItems[key].iteritems():
+    
+    # check to see that the stories have been read together at least minimumOverlapThreshhold times
     if cnt >= minimumOverlapThreshhold:
         
         # this is the old calc, saved for reference
@@ -198,7 +203,6 @@ for key,listOfReaders in intersections.iteritems():
   similarity_sorted=sorted(similarityArray.iteritems(),key=operator.itemgetter(1))
   for topN in range(min(similarStoryCount,len(similarity_sorted))):
     sql= "insert into story_similarity(method,story_id,related_story_id,relevance,created) values(6,%d,%d,%f,curdate())"%(similarity_sorted[topN][0][0],similarity_sorted[topN][0][1],similarity_sorted[topN][1])
-#    print sql
     realRecCount=realRecCount+1
     cursor.execute(sql)
     
